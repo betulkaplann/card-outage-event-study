@@ -1,0 +1,53 @@
+{
+  "_about": "All assumptions of the simulation in one place. Today they are illustrative; in the thesis each one is calibrated from public data (WP1) or the merchant survey and interviews (WP2). See 'calibration' at the bottom.",
+
+  "seed": 11,
+  "period": {"start": "2025-01-01", "end": "2025-12-31"},
+
+  "stores": {
+    "n": 60,
+    "regions": ["North", "East", "South", "West"],
+    "open_hours": [9, 21],
+    "base_sales_sek_per_hour": {"median": 4000, "log_sd": 0.4}
+  },
+
+  "backup": {
+    "share_of_stores": 0.5,
+    "selection_on_size": 0.0
+  },
+
+  "payment_mix": {"card": 0.86, "a2a": 0.08, "cash": 0.06},
+
+  "switching_during_outage": {
+    "without_backup": {"a2a": 0.20, "cash": 0.15},
+    "with_backup":    {"a2a": 0.55, "cash": 0.15}
+  },
+
+  "catch_up_share": 0.10,
+  "noise_log_sd": 0.158,
+
+  "economics": {
+    "gross_margin": 0.30,
+    "backup_cost_sek_per_store_year": 6000
+  },
+
+  "outages": [
+    {"event": 1, "date": "2025-03-14", "start_hour": 11, "hours": 3, "scope": "National"},
+    {"event": 2, "date": "2025-05-22", "start_hour": 16, "hours": 2, "scope": "North"},
+    {"event": 3, "date": "2025-08-29", "start_hour": 12, "hours": 4, "scope": "National"},
+    {"event": 4, "date": "2025-10-10", "start_hour": 17, "hours": 2, "scope": "South"},
+    {"event": 5, "date": "2025-11-28", "start_hour": 13, "hours": 3, "scope": "National"}
+  ],
+
+  "calibration": {
+    "payment_mix": "WP1: Riksbank payment reports and surveys; WP2: survey Q5",
+    "outages": "WP1: outage catalogue from public sources (templates/outage_catalogue_template.csv): frequency, duration, scope",
+    "switching_during_outage": "WP2: survey questions Q8-Q10 and interviews (what customers did when cards failed)",
+    "catch_up_share": "WP2: survey question Q11 (did customers come back later?)",
+    "backup.share_of_stores": "WP2: survey question Q12 (which fallbacks merchants have)",
+    "backup.selection_on_size": "WP2: survey (are larger merchants more likely to have a backup?); > 0 = bigger stores more likely",
+    "base_sales_sek_per_hour": "WP2: survey question Q3 (store size band); public retail statistics",
+    "economics.gross_margin": "Public: annual reports of listed Nordic retailers; WP2 interviews",
+    "economics.backup_cost_sek_per_store_year": "Supplier price lists (e.g. ID24's Resilient Payments); compared with willingness to pay in survey Q14"
+  }
+}

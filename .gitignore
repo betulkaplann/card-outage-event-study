@@ -1,0 +1,7 @@
+# Simulated data (17 MB) - recreated by the notebook
+data/
+
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
