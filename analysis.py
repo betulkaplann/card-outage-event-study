@@ -159,3 +159,42 @@ def method_decomposition(df):
         row["total change"] = (g["sales_total"] - cf).sum() / cf.sum()
         rows.append(row)
     return pd.DataFrame(rows).set_index("group")
+
+
+# ---------------------------------------------------------------------------
+# 5. Placebo test: fake outage dates
+# ---------------------------------------------------------------------------
+def placebo_did(df, outages, shifts=(-21, -14, -7, 7, 14, 21)):
+    """Run the same DiD on days WITHOUT an outage.
+
+    Each real outage is moved k days (k = 7, 14, 21 keeps the same weekday),
+    with the same hours and the same stores. Nothing happened on those days,
+    so b3 should be close to zero. If it is not, the method finds effects
+    that are not there (for example from weekday or store patterns).
+
+    df      : output of add_counterfactual
+    outages : the outage table returned by simulate.simulate
+    Returns one row per shift: b3, standard error, 95% CI and p-value.
+    """
+    real_days = set(pd.to_datetime(outages["date"]))
+    rows = []
+    for k in shifts:
+        fake = df.drop(columns=["outage", "after", "rel_hour"]).copy()
+        fake["outage"], fake["after"], fake["rel_hour"] = 0, 0, np.nan
+        for o in outages.itertuples():
+            day = pd.Timestamp(o.date) + pd.Timedelta(days=k)
+            if day in real_days:                     # never use a real outage day
+                continue
+            in_scope = (fake["date"] == day) & ((o.scope == "National") | (fake["region"] == o.scope))
+            end = o.start_hour + o.hours
+            fake.loc[in_scope, "rel_hour"] = fake.loc[in_scope, "hour"] - o.start_hour
+            fake.loc[in_scope & fake["hour"].between(o.start_hour, end - 1), "outage"] = 1
+            fake.loc[in_scope & fake["hour"].between(end, end + 1), "after"] = 1
+        if fake["outage"].sum() == 0:                # shift falls outside the data
+            continue
+        fit = did_regression(fake)
+        lo, hi = fit.conf_int().loc["outage:backup"]
+        rows.append({"shift (days)": k, "b3": fit.params["outage:backup"],
+                     "se": fit.bse["outage:backup"], "lo": lo, "hi": hi,
+                     "p-value": fit.pvalues["outage:backup"]})
+    return pd.DataFrame(rows)

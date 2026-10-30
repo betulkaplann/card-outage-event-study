@@ -69,3 +69,13 @@ def test_outage_catalogue_template_contains_no_invented_events():
     template = pd.read_csv(ROOT / "templates" / "outage_catalogue_template.csv")
     assert len(template) == 0                     # rows only from cited public sources
     assert "source_url" in template.columns
+
+
+def test_placebo_dates_show_no_effect():
+    """On days without an outage, the DiD should find (almost) nothing."""
+    cfg = power.small_design(n_stores=20, n_outages=2, seed=0)
+    df, _, outages = simulate.simulate(cfg)
+    df, _ = an.add_counterfactual(df)
+    placebo = an.placebo_did(df, outages, shifts=(-7, 7, 14))
+    assert len(placebo) == 3
+    assert placebo["b3"].abs().mean() < 0.03
